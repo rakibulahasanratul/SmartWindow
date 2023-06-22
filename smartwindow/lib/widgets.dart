@@ -17,7 +17,8 @@ class DeviceScreen extends StatefulWidget {
 }
 
 class _DeviceScreenPageState extends State<DeviceScreen> {
-  double _glassSliderValue = 0; //for Glass Controller, default is 0
+  double _glassSliderValue = 5.0;
+  double _glassSliderValue2 = 0.0; //for Glass Controller, default is 0
   double centralBatterypercentage =
       0; // Initializing central battery percentage value
   var databaseService =
@@ -164,7 +165,7 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
   getBatteryVoltage() {
     centraltimer = Timer.periodic(
         Duration(
-          seconds: 65,
+          seconds: 5,
         ), (timer) {
       log("central Timer Working");
       getCentralVoltage(widget.device);
@@ -177,9 +178,13 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
       rows.add(
         DataRow(
           cells: <DataCell>[
-            DataCell(Text(
-              centralvoldataDateShow[i].CV,
-              textAlign: TextAlign.center,
+            DataCell(Center(
+              child: Text(
+                double.parse(centralvoldataDateShow[i].CV) < 5
+                    ? "Not Started"
+                    : centralvoldataDateShow[i].CV,
+                textAlign: TextAlign.center,
+              ),
             )),
           ],
         ),
@@ -198,7 +203,7 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
       if (service4.characteristics.isNotEmpty) {
         service4.characteristics[2].write([hexValue]);
         //Service id for control code characteristic '55441004-3322-1100-0000-000000000000'
-        //log('Cha4 service UUID: ${service4.characteristics[2].uuid}');
+        log('Cha4 service UUID: ${service4.characteristics[2].uuid}');
       }
     }
   }
@@ -206,9 +211,8 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
   Widget _buildServiceTiles(List<BluetoothService> services) {
     return Column(
       children: [
-        ElevatedButton(
-          child: Text('Boost Coverter', style: TextStyle(fontSize: 26)),
-          onPressed: () {},
+        Container(
+          child: Text("Boost Converter", style: TextStyle(fontSize: 26)),
         ),
         SizedBox(height: 20),
         Row(
@@ -260,7 +264,7 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
             onChangeEnd: (double value) {
               setState(() {
                 _glassSliderValue = value;
-                log('Glass Controller value changed: $value');
+                log('Boost converter value changed: $value');
                 if (services.length >= 4) {
                   BluetoothService service4 = services[3];
                   if (service4.characteristics.isNotEmpty) {
@@ -271,9 +275,9 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
                 }
               });
             },
-            min: 0.0,
-            max: 22.0,
-            divisions: 22,
+            min: 5.0,
+            max: 30.0,
+            divisions: 25,
             thumbColor: Colors.deepPurple,
             label: '$_glassSliderValue'),
         SizedBox(height: 30),
@@ -296,6 +300,33 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
                 ],
                 rows: getCentraldetails(),
               ),
+        SizedBox(height: 50),
+        Container(
+          child: Text("PWM", style: TextStyle(fontSize: 26)),
+        ),
+        Slider(
+            value: _glassSliderValue2,
+            onChanged:
+                (value) {}, //Not in use but its mandatory field of slider widget.
+            onChangeEnd: (double value) {
+              setState(() {
+                _glassSliderValue2 = value;
+                log('Glass Controller value changed: $value');
+                if (services.length >= 4) {
+                  BluetoothService service4 = services[3];
+                  if (service4.characteristics.isNotEmpty) {
+                    service4.characteristics[3].write([value.toInt()]);
+                    //Service id for control code characteristic '55441001-3322-1100-0000-000000000000'
+                    log('Char4 service UUID: ${service4.characteristics[3].uuid}');
+                  }
+                }
+              });
+            },
+            min: 0,
+            max: 128,
+            divisions: 128,
+            thumbColor: Colors.deepPurple,
+            label: '$_glassSliderValue2'),
       ],
     );
   }
@@ -343,12 +374,27 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
         child: Column(
           children: <Widget>[
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset(
-                  'assets/images/AMIlogoWEBP.webp',
-                  height: 60,
-                  width: 60,
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset(
+                      'assets/images/AMIlogoWEBP.webp',
+                      height: 60,
+                      width: 60,
+                    ),
+                  ],
+                ),
+                SizedBox(width: 290),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset(
+                      'assets/images/Miami_OH_JPG.jpg',
+                      height: 60,
+                      width: 60,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -393,11 +439,11 @@ class _DeviceScreenPageState extends State<DeviceScreen> {
           ],
         ),
       ),
-      floatingActionButton: Image.asset(
+      /*floatingActionButton: Image.asset(
         'assets/images/Miami_OH_JPG.jpg',
         height: 60,
         width: 60,
-      ),
+      ),*/
     );
   }
 }
